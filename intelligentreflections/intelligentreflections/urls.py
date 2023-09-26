@@ -25,5 +25,8 @@ from items.views import ItemListView, store_item
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('items/', ItemListView.as_view(), name='items'),
-    path('item/<int:item_id>', store_item, name='item')
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) # Added to have media root
+    path('item/<int:item_id>', store_item, name='item'),
+    path('items/', ItemListView.as_view(), name='cms_items'),
+    path('item/<int:item_id>', store_item, name='cms_item')
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) \ 
+  + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) # Remove for production

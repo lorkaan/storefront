@@ -6,11 +6,11 @@
 {% block content %}
 
 {% if item_list %}
-<h1>CMS Item List</h1>
+<h1>Items</h1>
 <ul>
     {% for item in item_list %}
     <li>
-        <a href="{{ item.get_absolute_url }}">
+        <a href="{% url 'cms_item' item_id=item.id %}">
             <div>
                 {{ item.name }}
             </div>
