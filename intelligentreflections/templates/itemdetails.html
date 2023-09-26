@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+
+<a href="{% url 'items' %}">Back to Items</a>
+</br>
+
+<h3>{{ item.name }}</h3>
+<p>{{ item.description }}</p>
+
+{% if options|length > 0 %}
+<ul>
+    {% for key, elem in options.items %}
+    <li>
+        <div>
+            <p>{{ key }}</p>
+            {% for opt in elem %}
+            <input {% if not opt.available %} disabled="true" onclick="this.checked=false" {% endif %} type="radio" name="{{ opt.option__name }}" value="{{ opt.id }}" {% if opt.defaultoption %} checked="true" {% endif %}><label {% if not opt.available %} style="color:lightgrey" {% endif %}>  {{ opt.optionvalue__value }}</label></br>
+            {% endfor %}
+        </div>
+    </li>
+    {% empty %}
+    <li>Unable to Find Item and Options</li>
+    {% endfor %}
+</ul>
+{% else %} 
+<p>No Options</p>
+{% endif %}
+
+{% endblock %}
