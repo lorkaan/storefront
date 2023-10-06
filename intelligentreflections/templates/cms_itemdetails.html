@@ -8,34 +8,34 @@
 <a href="{% url 'cms_items' %}">Back to Items</a>
 </br>
 
-<h3>{{ item.name }}</h3>
-<p>{{ item.description }}</p>
-
-{% if options|length > 0 %}
-<ul>
-    {% for key, elem in options.items %}
-    <li>
-        <div>
-            <p>{{ key }}</p>
-            {% for opt in elem %}
-            <input {% if not opt.available %} disabled="true" onclick="this.checked=false" {% endif %} type="radio" name="{{ opt.option__name }}" value="{{ opt.id }}" {% if opt.defaultoption %} checked="true" {% endif %}><label {% if not opt.available %} style="color:lightgrey" {% endif %}>  {{ opt.optionvalue__value }}</label></br>
-            {% endfor %}
-        </div>
-    </li>
-    {% empty %}
-    <li>Unable to Find Item and Options</li>
-    {% endfor %}
-</ul>
-{% else %} 
-<p>No Options</p>
-{% endif %}
-
 <h4>Edit Data</h4>
-<form id="edit_form">
-    <label>Name: </label><input name="name" type="text" placeholder="{{ item.name }}"></br>
-    <label>Description:</label></br><input name="description" type="textarea"></br></br>
-    <label>Options:</label></br>
-    
+<form id="edit_form" method="POST" action="/cms_upload">
+    {% csrf_token %}
+    <label>Name: </label><input name="name" type="text" value="{{ item.name }}"></br>
+    <label>Description:</label></br><input name="description" value="{{ item.description }}" type="textarea"></br></br>
+    {% if options|length > 0 %}
+        <label>Options:</label></br>
+        <ul>
+            {% for key, elem in options.items %}
+            <li>
+                <div>
+                    <p>{{ key }}</p>
+                    {% for opt in elem %}
+                    <input type="text" name="{{ opt.option__name }}" value="{{ opt.optionvalue__value }}">
+                    <div>
+                        <input type="checkbox" name="{{ opt.option__name }}.available" {% if opt.available %} checked="true" {% endif %}><label>Available</label>
+                        <input type="checkbox" name="{{ opt.option__name }}.defaultoption" {% if opt.defaultoption %} checked="true" {% endif %}><label>Default</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        <input type="submit" value="Submit">
+    {% else %} 
+    <p>No Options</p>
+    {% endif %}
+
 </form>
 
 {% endblock %}

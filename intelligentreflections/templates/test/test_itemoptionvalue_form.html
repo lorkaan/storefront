@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+{{ item_form.as_p }}
+</br>
+</br>
+<h3>Options</h3>
+{% for option in option_forms %}
+{{ option.as_p }}
+{% endfor %}
+{% endblock %}

@@ -19,14 +19,18 @@ from django.urls import path
 
 from django.conf import settings
 from django.conf.urls.static import static
+from django.conf.urls import include
 
-from items.views import ItemListView, store_item
+from items.views import ItemListView, ItemDetailsView, CmsItemListView, CmsItemDetailsView, CMSItemUploadView, TestItemCMSView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('items/', ItemListView.as_view(), name='items'),
-    path('item/<int:item_id>', store_item, name='item'),
-    path('items/', ItemListView.as_view(), name='cms_items'),
-    path('item/<int:item_id>', store_item, name='cms_item')
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) \ 
+    path('item/<int:item_id>', ItemDetailsView.as_view(), name='item'),
+    path('cms_items/', CmsItemListView.as_view(), name='cms_items'),
+    path('cms_item/<int:item_id>', CmsItemDetailsView.as_view(), name='cms_item'),
+    path("test/cms_item/<int:item_id>", TestItemCMSView.as_view(), name="test_itemoptionvalue"),
+    path('cms_upload', CMSItemUploadView.as_view(), name="cms_upload"),
+    path('accounts/', include('django.contrib.auth.urls'))
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) \
   + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) # Remove for production
