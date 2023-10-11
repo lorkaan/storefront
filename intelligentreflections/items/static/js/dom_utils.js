@@ -39,7 +39,7 @@ var dom_utils = function(){
      */
     function create_elem_from_config(dict){
         let full_config = {};
-        for(let [key, value] of Object.entries(this.dom_create_config)){
+        for(let [key, value] of Object.entries(dom_create_config)){
             if(utils.isNull(dict[key])){
                 full_config[key] = value.default;
             }else{
@@ -89,7 +89,7 @@ var dom_utils = function(){
             }
             return elem;
         }else{
-            throw new DOMError("Can not create element with tag: " + elem);
+            throw new DOMError("Can not create element with tag: " + tagName);
         }
     }
 

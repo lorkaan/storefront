@@ -10,6 +10,11 @@
 
 var form_handler = function(){
 
+    class ValidationError extends Error{
+        constructor(message){
+            super(message);
+        }
+    }
 
     /** Class for indicating an error with the ItemOptionValue validation */
     class ItemOptionValueValidationError extends Error{
@@ -24,45 +29,27 @@ var form_handler = function(){
         }
     }
 
-    /** This class represents a ItemOptionValue passed from the server.
+    /** This is an Parent class for handling Forms that are customized with server
+     * side variables (like data from queries)
      * 
-     * Used for validation and an interface for building the DOM
      */
-    class ItemOptionValue{
+    class DataForm{
 
-        /** This is the global container to put forms in when rendering */
-        static container_config = {
-            tagName: "div"
-        };
+        static valid_keys = {};
 
-        /** The keys and functions to use for validating data
-         * passed from the server
-         */
-        static valid_keys = {
-            "option__name": utils.isString,
-            "optionvalue__value": utils.isString,
-            "available": utils.isBoolean,
-            "defaultoption": utils.isBoolean
-        };
-
-        /** Validates Option from a given dictionary
-         * 
-         * @param {Dictionary} options_dict     The dictionary to validate
-         * @returns {Boolean}   True if the given dictionary passes validation, false otherwise
-         */
-        static validate_options(options_dict){
-            if(!utils.isObject(options_dict)){
-                throw new ItemOptionValueValidationError("Expected a dictionary, got " + typeof(options_dict));
+        static validate(data_dict){
+            if(!utils.isObject(data_dict)){
+                throw new TypeError("Validation can not be done on: " + type(data_dict));
             }
             for(let [key, value] of Object.entries(this.valid_keys)){
                 if(utils.isFunction(value)){
-                    if(value(options_dict[key])){
+                    if(value(data_dict[key])){
                         continue;
                     }else{
                         return false;
                     }
                 }else{
-                    throw new ItemOptionValueValidationError("Not a function: " + key + " -> " + typeof(value));
+                    throw new ValidationError("Not a function: " + key + " -> " + typeof(value));
                 }
             }
             return true;
@@ -71,49 +58,8 @@ var form_handler = function(){
         // Controls the regex for injection into the configs
         static config_injection_regex = /@[\w_]+@/;
 
-        // Configuration of DOM
-        static dom_config = {
-            option:{
-                tagName: "input",
-                attributes: {
-                    type: "text",
-                    name: "@option__name@",
-                    value: "@optionvalue__value@"
-                }
-            },
-            defaultoption: {
-                tagName: "input",
-                attributes:{
-                    type: "checkbox",
-                    name: "@option__name@.defaultoption",
-                    checked: "@defaultoption@"
-                }
-            },
-            available: {
-                tagName: "input",
-                attributes:{
-                    type: "checkbox",
-                    name: "@option__name@.available",
-                    checked: "@available@"
-                }
-            }
-        };
-
-        /** Generates a DOM based on the given configuration dictionary
-         * 
-         * @param {*} config_dict 
-         * @returns 
-         */
-        static generate_dom(config_dict){
-            let container = dom_utils.config_create_elem(this.container_config);
-            // to do
-            let cur_elem = null;
-            for(let [key, value] of Object.entries(config_dict)){
-                cur_elem = dom_utils.config_create_elem(value);
-                container.appendChild(cur_elem);
-            }
-            return container;
-        }
+        // Configuration of DOM in regards to variable data
+        static dom_config = {};
 
         /** Extracts a Key from a matched regular expression
          * 
@@ -128,8 +74,18 @@ var form_handler = function(){
             }
         }
 
+        /** This is the parse_config for doing it from the class
+         * 
+         * @param {*} value_dict 
+         * @param {*} parsed_values 
+         * @returns 
+         */
+        static parse_config_dict(value_dict, parsed_values={}){
+            return this._parse_config_dict(this.dom_config, value_dict, parsed_values);
+        }
+
         /** Parse a configuration dictionary with variables to given a dictionary with concrete
-         * values
+         * values. Helper function that takes a config dictionary as well as a value dictionary.
          * 
          * @param {*} config            Configuration Dictionary with variables
          * @param {*} value_dict        Dictionary containing concrete values for variables
@@ -139,7 +95,7 @@ var form_handler = function(){
          *                      second is total set of parsed variables linked to their variable names
          * @throws {TypeError}  If there is a typing problem in configuration or concrete values dictionaries
          */
-        static parse_config_dict(config, value_dict, parsed_values={}){
+        static _parse_config_dict(config, value_dict, parsed_values={}){
             if(utils.isObject(config)){
                 let ret_dict = {};
                 let matches = [];
@@ -175,8 +131,17 @@ var form_handler = function(){
                         }
                         ret_dict[key] = cur;
                     }else if(utils.isObject(value)){
-                        // Recursion
-                        let [cur, new_parsed] = parse_config_dict(value, value_dict, parsed_values);
+                        if(value instanceof DataForm){
+                            throw new TypeError("Can not work with other form objects yet");
+                        }else{
+                            // Recursion
+                            let [cur, new_parsed] = _parse_config_dict(value, value_dict, parsed_values);
+                            parsed_values = new_parsed;
+                            ret_dict[key] = cur;
+                        }
+                    }else if(utils.isSubClass(value, DataForm)){
+                        // This is what to do if given a Class and not an object
+                        let [cur, new_parsed] = value.parse_config_dict(value_dict, parsed_values);
                         parsed_values = new_parsed;
                         ret_dict[key] = cur;
                     }else{
@@ -189,6 +154,22 @@ var form_handler = function(){
                 // Not a dictionary
                 throw new TypeError("Expected a dictionary for config, instead got " + typeof(config));
             }
+        }
+
+        /** Generates a DOM based on the given configuration dictionary
+         * 
+         * @param {*} config_dict 
+         * @returns 
+         */
+        static generate_dom(config_dict){
+            let container = dom_utils.config_create_elem(this.container_config);
+            // to do
+            let cur_elem = null;
+            for(let [key, value] of Object.entries(config_dict)){
+                cur_elem = dom_utils.config_create_elem(value);
+                container.appendChild(cur_elem);
+            }
+            return container;
         }
 
         /** Given some values from a server, creates a form in the dom based
@@ -205,13 +186,107 @@ var form_handler = function(){
             let container_elem = this.generate_dom(config);
             parent_elem.appendChild(container_elem);
         }
-    
-        
+
+    }
+
+    class ItemForm extends DataForm{
+
+        static container_config = {
+            tagName: "div"
+        };
+
+        static valid_keys = {
+            "name": utils.isString,
+            "description": utils.isString,
+            "price": utils.isPositiveInteger
+        };
+
+        static dom_config = {
+            name: {
+                tagName: "input",
+                attributes: {
+                    type: "text",
+                    name: "name",
+                    value: "@name@"
+                }
+            },
+            description: {
+                tagName: "input",
+                attributes: {
+                    type: "textarea",
+                    name: "description",
+                    value: "@description@"
+                }
+            },
+            price:{
+                tagName: "input",
+                attributes: {
+                    type: "number",
+                    name: "price",
+                    value: "@price@",
+                    min: "0",
+                    max: "1000",
+                    step: "1"
+                }
+            }
+        };
+
+    }
+
+    /** This class represents a ItemOptionValue passed from the server.
+     * 
+     * Used for validation and an interface for building the DOM
+     */
+    class ItemOptionValueForm extends DataForm{
+
+        /** This is the global container to put forms in when rendering */
+        static container_config = {
+            tagName: "div"
+        };
+
+        /** The keys and functions to use for validating data
+         * passed from the server
+         */
+        static valid_keys = {
+            "option__name": utils.isString,
+            "optionvalue__value": utils.isString,
+            "available": utils.isBoolean,
+            "defaultoption": utils.isBoolean
+        };
+
+        // Configuration of DOM
+        static dom_config = {
+            option:{
+                tagName: "input",
+                attributes: {
+                    type: "text",
+                    name: "@option__name@",
+                    value: "@optionvalue__value@"
+                }
+            },
+            defaultoption: {
+                tagName: "input",
+                attributes:{
+                    type: "checkbox",
+                    name: "@option__name@.defaultoption",
+                    checked: "@defaultoption@"
+                }
+            },
+            available: {
+                tagName: "input",
+                attributes:{
+                    type: "checkbox",
+                    name: "@option__name@.available",
+                    checked: "@available@"
+                }
+            }
+        };
         
     }
 
     return {
-        "ItemOptionValue": ItemOptionValue
+        "ItemOptionValue": ItemOptionValueForm,
+        "Item": ItemForm
     };
 
 }();

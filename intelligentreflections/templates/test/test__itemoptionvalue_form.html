@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block header %}
+{% load static %}
+<script src="{% static 'js/utils.js' %}"></script>
+<script src="{% static 'js/dom_utils.js' %}"></script>
+<script src="{% static 'js/form_setup.js' %}"></script>
+<script src="{% static 'js/run_form.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<p id="hidden_item_id" style="display:none;">{{ item_id }}</p>
+<p id="csrf_token" style="display:none;">{{ csrf_token }}</p>
+<div id="formContainer">
+
+</div>
+{% endblock %}

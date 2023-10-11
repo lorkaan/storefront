@@ -21,6 +21,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls import include
 
+from django.views.static import serve # Test to see if I can serve
+
 from items.views import ItemListView, ItemDetailsView, CmsItemListView, CmsItemDetailsView, CMSItemUploadView, TestItemCMSView
 
 urlpatterns = [
@@ -30,6 +32,7 @@ urlpatterns = [
     path('cms_items/', CmsItemListView.as_view(), name='cms_items'),
     path('cms_item/<int:item_id>', CmsItemDetailsView.as_view(), name='cms_item'),
     path("test/cms_item/<int:item_id>", TestItemCMSView.as_view(), name="test_itemoptionvalue"),
+    path("test/cms/<int:item_id>", TestItemCMSView.as_view(), name="test_cms"),
     path('cms_upload', CMSItemUploadView.as_view(), name="cms_upload"),
     path('accounts/', include('django.contrib.auth.urls'))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) \

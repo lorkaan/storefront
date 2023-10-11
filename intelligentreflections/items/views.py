@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views import generic, View
 
-from django.http import Http404
+from django.http import Http404, JsonResponse
 
 from .models import Item, Option, OptionValue, ItemOptionValue, ItemOptionValueImage
 from utils.utils import merge_dictionary_list
@@ -47,6 +47,7 @@ class ItemDetailsView(View):
 
         return render(request, self.__class__.template_name, {"item": item, "options": options_dict})
 
+
 class CmsItemDetailsView(ItemDetailsView):
     template_name = "cms_itemdetails.html"
 
@@ -58,6 +59,13 @@ class CMSItemUploadView(View):
         print(data)
         return render(request, self.__class__.template_name, data)
 
+class ItemDetailsData:
+    template_name = "test_cms.html"
+
+    def post(self, request, **kwargs):
+        data = request.POST
+        return JsonResponse(data)
+
 def test_itemoptionvalue_form(request):
 
     form = ItemOptionValueForm()
@@ -65,22 +73,29 @@ def test_itemoptionvalue_form(request):
 
 class TestItemCMSView(View):
 
-    template_name = "test/test_itemoptionvalue_form.html"
+    template_name = "test/test__itemoptionvalue_form.html"
 
-    def get(self, request, item_id):
+    def post(self, request, item_id):
         try:
-            item = Item.objects.filter(id=item_id).values("name", "description").get()
+            item = Item.objects.filter(id=item_id).values("name", "description", "price").get()
         except Item.DoesNotExist:
             raise Http404("Item does not exist")
-        print(item)
-        item_form = ItemEditForm(initial=item)
         try:
             custom_options = list(ItemOptionValue.objects.filter(item__id=item_id).order_by("option__name").values("id", "option__name", "optionvalue__value", "available", "defaultoption"))
         except ItemOptionValue.DoesNotExist:
             raise Http404("Item has no options")
-        option_forms = []
-        for option in custom_options:
-            option_forms.append(ItemOptionValueForm(initial=option))
+        name = None
+        options_dict = {}
+        cur_dict = {}
+        for custom_dict in custom_options:
+            if custom_dict["option__name"] != name:
+                name = custom_dict["option__name"]
+                options_dict[name] = []
+            cur_dict = custom_dict.copy()
+            options_dict[name].append(cur_dict)
 
-        return render(request, self.__class__.template_name, {"item_form": item_form, "option_forms": option_forms})
+        return JsonResponse({"item": item, "option_forms": options_dict})
 
+    def get(self, request, item_id):
+        # Just passing the id to the javascript to do the actual post and form handling
+        return render(request, self.__class__.template_name, {"item_id": item_id})

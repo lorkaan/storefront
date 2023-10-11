@@ -65,6 +65,29 @@
         return false;
       }
     }
+
+    /** Checks prototype chain to see if a given class is a subclass of
+     * another given class.
+     * 
+     * @param {*} subcls  The Class that is supposed to be the subclass.
+     * @param {*} cls     The Class that is supposed to be Parent class
+     * @returns           True if the subcls variable is a sub class of the cls variable
+     */
+    function isSubClass(subcls, cls){
+      if(isFunction(subcls) && isFunction(cls)){
+        let cur = subcls.__proto__;
+        while(!isNull(cur)){
+          if(cur == cls){
+            return true;
+          }else{
+            cur = cur.__proto__;
+          }
+        }
+        return false;
+      }else{
+        return false;
+      }
+    }
   
     /** Checks if a given parameter is a boolean.
      *
@@ -152,6 +175,16 @@
       }else{
         return false;
       }
+    }
+
+    function isPositiveInteger(obj, zeroFlag=true){
+      return (isInteger(obj, function(num){
+        if(toBoolean(zeroFlag)){
+          return (val >= 0);
+        }else{
+          return (val > 0);
+        }
+      }));
     }
   
     /** Determines if a given parameter is an Object
@@ -268,6 +301,8 @@
       'isBoolean': isBoolean,
       'toBoolean': toBoolean,
       'isEmptyString': isEmptyString,
+      'isPositiveInteger': isPositiveInteger,
+      'isSubClass': isSubClass,
       'isNull': isNull
     }
   
