@@ -47,6 +47,9 @@ class ItemDetailsView(View):
 
         return render(request, self.__class__.template_name, {"item": item, "options": options_dict})
 
+class EditItemDetailsView(ItemDetailsView):
+    template_name = "test/test_itemoptionvalue_form.html"
+
 
 class CmsItemDetailsView(ItemDetailsView):
     template_name = "cms_itemdetails.html"
@@ -70,6 +73,8 @@ def test_itemoptionvalue_form(request):
 
     form = ItemOptionValueForm()
     return render(request, "test/test_itemoptionvalue_form.html", {"form": form})
+
+
 
 class TestItemCMSView(View):
 

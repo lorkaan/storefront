@@ -178,7 +178,7 @@
     }
 
     function isPositiveInteger(obj, zeroFlag=true){
-      return (isInteger(obj, function(num){
+      return (isInteger(obj, function(val){
         if(toBoolean(zeroFlag)){
           return (val >= 0);
         }else{

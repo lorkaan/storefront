@@ -1,0 +1,273 @@
+var edit_form_manager = function(){
+
+    let id_type_name_sep = ".";  // This separates an identifier from a type
+    let option_key_sep = "_";   // This separates the variable from literals in option element ids
+
+    let edit_dom_key = "edit";
+    let display_dom_key = "display";
+
+    let option_submit_class = "option_submit";
+
+    let display_to_edit_class = "switch_edit";
+    let edit_to_display_class = "switch_display"
+
+    let form_id_types = ["form", "submit", "container"]; // Order matters as name as 0 is important
+
+    let form_name_types = ["name", "available", "default"];
+
+    class ChangeValueHandler{
+
+        static validate(value){
+            return (utils.isString(value) || utils.isPositiveInteger(value) || utils.isBoolean(value));
+        }
+
+        constructor(){
+            this.values = {};
+        }
+
+        addChange(key, value){
+            if(utils.isString(key)){
+                if(this.constructor.validate(value)){
+                    if(utils.isNull(this.values[key])){
+                        this.values[key] = value;
+                    }else{
+                        throw new TypeError("Attempted to add a change that already exists");
+                    }
+                }else{
+                    throw new TypeError("Can not validate the value: " + typeof(value) + ", " + value);
+                }
+            }else{
+                throw new TypeError("Can not validate key: " + typeof(key) + ", " + key);
+            }
+        }
+
+        clear(){
+            this.values = {};
+        }
+
+        get_iteratable(){
+            return Object.entries(this.values);
+        }
+
+        get(key){
+            if(utils.isString(key)){
+                return this.values[key];
+            }else{
+                throw new TypeError("Can not validate key: " + typeof(key) + ", " + key);
+            }
+        }
+    }
+
+    function change_item_values(parent){
+        let change_handler = new ChangeValueHandler();
+        for(let i = 0; i < parent.children.length; i++){
+            if(utils.isObject(parent.children[i], HTMLFormElement)){
+                let cur = null;
+                for(let j = 0; j < parent.children[i].elements.length; j++){
+                    if(utils.isObject(parent.children[i].elements[j], HTMLElement)){
+                        cur = parent.children[i].elements[j].getAttribute("name");
+                        if(utils.isString(parent.children[i].elements[j].nodeName, "INPUT")){
+                            change_handler.addChange(cur, parent.children[i].elements[j].value);
+                        }else{
+                            continue;
+                        }
+                    }else{
+                        continue;
+                    }
+                }
+            }else{
+                continue;
+            }
+        }
+        let display_div = parent.nextElementSibling;
+        let cur_key = null;
+        let cur_val = null;
+        for(let i = 0; i < display_div.children.length; i++){
+            if(utils.isObject(display_div.children[i], HTMLElement)){
+                cur_key = display_div.children[i].getAttribute("name");
+                if(utils.isString(cur_key)){
+                    cur_val = change_handler.get(cur_key);
+                    if(!utils.isNull(cur_val)){
+                        display_div.children[i].innerHTML = cur_val;
+                    }
+                }
+            }else{
+                continue;
+            }
+        }
+        change_handler.clear();
+    }
+
+    function change_option_values(parent){
+    }
+
+    function retrieve_prefix(name, sep=""){
+        if(utils.isString(name)){
+            let text_list = name.split(sep);
+            if(utils.isArray(text_list)){
+                return text_list[0];
+            }else{
+                throw new TypeError("Can not separate prefix");
+            }
+        }else{
+            throw new TypeError("Can not retrieve prefix for non-string: " + typeof(name));
+        }
+    }
+
+    function get_new_name(old_id){
+        if(utils.isString(old_id)){
+            let old_full_id = [old_id, form_id_types[0]].join(id_type_name_sep);
+            let elem = document.getElementById(old_full_id);
+            if(utils.isObject(elem, HTMLFormElement)){
+                let inputs = elem.elements;
+                for(let i = 0; i < inputs.length; i++){
+                    if(utils.isString(inputs[i].getAttribute("name"))){
+                        return inputs[i].value;
+                    }
+                }
+            }
+        }
+    }
+
+    function change_ids(old_id, new_id){
+        if(!utils.isString(old_id) || !utils.isString(new_id)){
+            throw new TypeError("Expected Strings, got " + typeof(old_id) + ", " + typeof(new_id));
+        }
+        let cur_old_full_id = null;
+        let cur_new_full_id = null;
+        let cur_elem = null;
+        for(let i = 0; i < form_id_types.length; i ++){
+            cur_old_full_id = [old_id, form_id_types[i]].join(id_type_name_sep);
+            cur_new_full_id = [new_id, form_id_types[i]].join(id_type_name_sep);
+            if(utils.isString(cur_old_full_id) && utils.isString(cur_new_full_id)){
+                cur_elem = document.getElementById(cur_old_full_id);
+                if(utils.isObject(cur_elem, HTMLElement)){
+                    cur_elem.setAttribute("id", cur_new_full_id);
+                }else{
+                    throw new TypeError("Can not find an HTMLElement with id: " + cur_old_full_id);
+                }
+            }else{
+                throw new TypeError("Expected two strings, got: " + cur_old_full_id + ", " + cur_new_full_id);
+            }
+        }
+    }
+
+    function change_input_names(old_id, new_id){
+        if(!utils.isString(old_id) || !utils.isString(new_id)){
+            throw new TypeError("Expected Strings, got " + typeof(old_id) + ", " + typeof(new_id));
+        }
+        let form_id = [old_id, form_id_types[0]].join(id_type_name_sep);
+        let form_elem = document.getElementById(form_id);
+        if(!utils.isObject(form_elem, HTMLFormElement)){
+            throw new TypeError("Could not find the Form Element");
+        }
+        let cur = null;
+        let cur_name = null;
+        for(let i = 0; i < form_elem.elements.length; i++){
+            cur_name = form_elem.elements[i].getAttribute("name");
+            if(utils.isString(cur_name) && cur_name.startsWith(old_id)){
+                cur = cur_name.replace(old_id, new_id);
+                form_elem.elements[i].setAttribute("name", cur);
+            }else{
+                continue;
+            }
+        }
+    }
+
+    /** Replaces all the IDs with new ids indicating the name of the option.
+     * 
+     * DOES NOT CHECK FOR DUPLICATES
+     * 
+     * Come back and fix later (2.0)
+     * 
+     * @param {String} old_full_id ID of the button clicked which holds the current option name info
+     */
+    function change_name(old_full_id){
+        let old_id = retrieve_prefix(old_full_id, id_type_name_sep);
+        let old_option_name = retrieve_prefix(old_id, option_key_sep);
+        let new_name = get_new_name(old_id);
+        let new_id = old_id.replace(old_option_name, new_name);
+        change_input_names(old_id, new_id);
+        change_ids(old_id, new_id);
+        let display_elem = document.getElementById([old_option_name, display_dom_key].join(option_key_sep));
+        for(let i = 0; i < display_elem.children.length; i++){
+            if(utils.isObject(display_elem.children[i], HTMLElement) && display_elem.children[i].nodeName == "LABEL"){
+                display_elem.children[i].innerHTML = new_name;
+            }
+        }
+        if(utils.isObject(display_elem, HTMLElement)){
+            display_elem.id = [new_name, display_dom_key].join(option_key_sep);
+        }
+    }
+
+    function switch_between_edit_display(elem, next=false){
+        if(utils.isObject(elem, HTMLElement)){
+            let parent = elem.parentElement;
+            if(utils.isObject(parent, HTMLElement)){
+                let cur = null;
+                if(utils.toBoolean(next)){
+                    cur = parent.nextElementSibling;
+                }else{
+                    cur = parent.previousElementSibling;
+                }
+                if(utils.isObject(cur, HTMLElement)){
+                    cur.style = "display:block;";
+                    parent.style = "display:none;";
+                }else{
+                    throw new TypeError("Previous is not HTMLElement: " + typeof(cur));
+                }
+            }else{
+                throw new TypeError("Parent is not HTMLElement: " + typeof(parent));
+            }
+        }else{
+            throw new TypeError("Target is not HTMLElement: " + typeof(elem));
+        }
+    }
+
+    function change_name_eventhandler(ev){
+        if(utils.isObject(ev.target, HTMLElement)){
+            let id = ev.target.getAttribute('id');
+            if(utils.isString(id)){
+                change_name(id);
+                switch_between_edit_display(ev.target, true);
+            }else{
+                throw new TypeError("Can not find the id: " + typeof(id) + " >> " + id);
+            }
+        }else{
+            throw new TypeError("Given target is not an HTMLElement");
+        }
+    }
+
+    function display_to_edit_handler(next, ev){
+        switch_between_edit_display(ev.target, next);
+    }
+
+    function edit_to_display_handler(ev){
+        if(utils.isObject(ev.target, HTMLElement)){
+            let parent = ev.target.parentElement;
+            if(parent.id == "item_edit"){
+                change_item_values(parent);
+            }else{
+                change_option_values(parent);
+            }
+            switch_between_edit_display(ev.target, true);
+        }else{
+            throw new TypeError("Target is not an HTMLElement: " + typeof(ev.target));
+        }
+    }
+
+    
+
+    
+
+    return {
+        "change_name_eventhandler": change_name_eventhandler,
+        "display_to_edit_handler": display_to_edit_handler,
+        "edit_to_display_handler": edit_to_display_handler,
+        "Class":{
+            "OptionSubmit": option_submit_class,
+            "SwitchDisplayToEdit": display_to_edit_class,
+            "SwitchEditToDisplay": edit_to_display_class
+        }
+    }
+}();
