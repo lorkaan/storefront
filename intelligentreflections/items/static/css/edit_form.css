@@ -1,3 +1,7 @@
 .no_list{
     list-style-type: none;
 }
+
+.disabled{
+    color:lightgrey;
+}

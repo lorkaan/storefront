@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function(event){
 
     let elem_collection = document.getElementsByClassName(edit_form_manager.Class.OptionSubmit);
     for(let i = 0; i < elem_collection.length; i++){
-        elem_collection[i].addEventListener("click", edit_form_manager.change_name_eventhandler);
+        elem_collection[i].addEventListener("click", edit_form_manager.edit_to_display_handler);
     }
 
     elem_collection = document.getElementsByClassName(edit_form_manager.Class.SwitchDisplayToEdit);

@@ -47,7 +47,7 @@
             </div>
             <div id="{{ opt.optionvalue__value }}_display">
                 
-                <input {% if not opt.available %} disabled="true" onclick="this.checked=false" {% endif %} type="radio" name="{{ opt.option__name }}" value="{{ opt.id }}" {% if opt.defaultoption %} checked="true" {% endif %}><label {% if not opt.available %} style="color:lightgrey" {% endif %}>  {{ opt.optionvalue__value }}</label><button id="{{ key }}_edit.button" class="switch_edit">Edit</button></br>
+                <input {% if not opt.available %} disabled="true" onclick="this.checked=false" {% endif %} type="radio" name="{{ opt.option__name }}" value="{{ opt.optionvalue__value }}" {% if opt.defaultoption %} checked="true" {% endif %}><label {% if not opt.available %} style="color:lightgrey" {% endif %}>  {{ opt.optionvalue__value }}</label><button id="{{ key }}_edit.button" class="switch_edit">Edit</button></br>
             </div>
             {% endfor %}
         </div>

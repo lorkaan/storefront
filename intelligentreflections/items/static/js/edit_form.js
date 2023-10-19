@@ -15,6 +15,36 @@ var edit_form_manager = function(){
 
     let form_name_types = ["name", "available", "default"];
 
+    function retrieve_suffix(val, sep="", squash_error_flag=false){
+        if(utils.isString(val)){
+            let text_list = val.split(sep);
+            if(utils.isArray(text_list, 1)){
+                return text_list[(text_list.length-1)];
+            }else{
+                return val;
+            }
+        }else{
+            if(utils.toBoolean(squash_error_flag)){
+                return null;
+            }else{
+                throw new TypeError("Can not retrieve suffix for non-string: " + typeof(val));
+            }
+        }
+    }
+
+    function retrieve_prefix(name, sep=""){
+        if(utils.isString(name)){
+            let text_list = name.split(sep);
+            if(utils.isArray(text_list)){
+                return text_list[0];
+            }else{
+                throw new TypeError("Can not separate prefix");
+            }
+        }else{
+            throw new TypeError("Can not retrieve prefix for non-string: " + typeof(name));
+        }
+    }
+
     class ChangeValueHandler{
 
         static validate(value){
@@ -58,59 +88,62 @@ var edit_form_manager = function(){
         }
     }
 
-    function change_item_values(parent){
-        let change_handler = new ChangeValueHandler();
-        for(let i = 0; i < parent.children.length; i++){
-            if(utils.isObject(parent.children[i], HTMLFormElement)){
-                let cur = null;
-                for(let j = 0; j < parent.children[i].elements.length; j++){
-                    if(utils.isObject(parent.children[i].elements[j], HTMLElement)){
-                        cur = parent.children[i].elements[j].getAttribute("name");
-                        if(utils.isString(parent.children[i].elements[j].nodeName, "INPUT")){
-                            change_handler.addChange(cur, parent.children[i].elements[j].value);
-                        }else{
-                            continue;
-                        }
-                    }else{
-                        continue;
-                    }
-                }
-            }else{
-                continue;
-            }
+    function change_item_values(changed_values, display_parent){
+        if(!utils.isObject(display_parent, HTMLElement)){
+            throw new TypeError("Expected HTMLElement, but got: " + typeof(display_parent) + ", " + display_parent);
         }
-        let display_div = parent.nextElementSibling;
+        if(!utils.isObject(changed_values, ChangeValueHandler)){
+            throw new TypeError("Expected ChangedValueHandler, but got: " + typeof(changed_values) + ", " + changed_values);
+        }
         let cur_key = null;
         let cur_val = null;
-        for(let i = 0; i < display_div.children.length; i++){
-            if(utils.isObject(display_div.children[i], HTMLElement)){
-                cur_key = display_div.children[i].getAttribute("name");
+        for(let i = 0; i < display_parent.children.length; i++){
+            if(utils.isObject(display_parent.children[i], HTMLElement)){
+                cur_key = retrieve_suffix(display_parent.children[i].getAttribute("name"), id_type_name_sep, true);
                 if(utils.isString(cur_key)){
-                    cur_val = change_handler.get(cur_key);
+                    cur_val = changed_values.get(cur_key);
                     if(!utils.isNull(cur_val)){
-                        display_div.children[i].innerHTML = cur_val;
+                        display_parent.children[i].innerHTML = cur_val;
                     }
                 }
             }else{
                 continue;
             }
         }
-        change_handler.clear();
     }
 
-    function change_option_values(parent){
+    function onclick_disabled(ev){
+        this.checked = false;
     }
 
-    function retrieve_prefix(name, sep=""){
-        if(utils.isString(name)){
-            let text_list = name.split(sep);
-            if(utils.isArray(text_list)){
-                return text_list[0];
-            }else{
-                throw new TypeError("Can not separate prefix");
+    function change_option_values(changed_values, display_parent){
+        if(!utils.isObject(display_parent, HTMLElement)){
+            throw new TypeError("Expected HTMLElement, but got: " + typeof(display_parent) + ", " + display_parent);
+        }
+        if(!utils.isObject(changed_values, ChangeValueHandler)){
+            throw new TypeError("Expected ChangedValueHandler, but got: " + typeof(changed_values) + ", " + changed_values);
+        }
+        for(let i = 0; i < display_parent.children.length; i++){
+            if(utils.isObject(display_parent.children[i], HTMLElement)){
+                if(display_parent.children[i].nodeName == "LABEL"){
+                    display_parent.children[i].innerHTML = changed_values.get("name");
+                    if(utils.toBoolean(changed_values.get("available"))){
+                        display_parent.children[i].classList.add("disabled");
+                    }else{
+                        display_parent.children[i].classList.remove("disabled");
+                    }
+                }else if(display_parent.children[i].nodeName == "INPUT"){
+                    display_parent.children[i].setAttribute("value", changed_values.get("name"));
+                    display_parent.children[i].value = changed_values.get("name");
+                    if(utils.toBoolean(changed_values.get("available"))){
+                        display_parent.children[i].onclick = null;
+                        display_parent.children[i].disabled = false;
+                    }else{
+                        display_parent.children[i].onclick = onclick_disabled;
+                        display_parent.children[i].disabled = true;
+                    }
+                }
             }
-        }else{
-            throw new TypeError("Can not retrieve prefix for non-string: " + typeof(name));
         }
     }
 
@@ -191,8 +224,13 @@ var edit_form_manager = function(){
         change_ids(old_id, new_id);
         let display_elem = document.getElementById([old_option_name, display_dom_key].join(option_key_sep));
         for(let i = 0; i < display_elem.children.length; i++){
-            if(utils.isObject(display_elem.children[i], HTMLElement) && display_elem.children[i].nodeName == "LABEL"){
-                display_elem.children[i].innerHTML = new_name;
+            if(utils.isObject(display_elem.children[i], HTMLElement)){
+                if(display_elem.children[i].nodeName == "LABEL"){
+                    display_elem.children[i].innerHTML = new_name;
+                }else if(display_elem.children[i].nodeName == "INPUT"){
+                    display_elem.children[i].setAttribute("value") = new_name;
+                    display_elem.children[i].value = new_name;
+                }
             }
         }
         if(utils.isObject(display_elem, HTMLElement)){
@@ -245,11 +283,34 @@ var edit_form_manager = function(){
     function edit_to_display_handler(ev){
         if(utils.isObject(ev.target, HTMLElement)){
             let parent = ev.target.parentElement;
-            if(parent.id == "item_edit"){
-                change_item_values(parent);
-            }else{
-                change_option_values(parent);
+            let change_handler = new ChangeValueHandler();
+            // This is the code to fill the ChangeValueHandler
+            for(let i = 0; i < parent.children.length; i++){
+                if(utils.isObject(parent.children[i], HTMLFormElement)){
+                    let cur = null;
+                    for(let j = 0; j < parent.children[i].elements.length; j++){
+                        if(utils.isObject(parent.children[i].elements[j], HTMLElement)){
+                            cur = parent.children[i].elements[j].getAttribute("name");
+                            if(utils.isString(parent.children[i].elements[j].nodeName, "INPUT")){
+                                change_handler.addChange(retrieve_suffix(cur, id_type_name_sep), parent.children[i].elements[j].value);
+                            }else{
+                                continue;
+                            }
+                        }else{
+                            continue;
+                        }
+                    }
+                }else{
+                    continue;
+                }
             }
+            let display_div = parent.nextElementSibling;
+            if(parent.id == "item_edit"){
+                change_item_values(change_handler, display_div);
+            }else{
+                change_option_values(change_handler, display_div);
+            }
+            change_handler.clear();
             switch_between_edit_display(ev.target, true);
         }else{
             throw new TypeError("Target is not an HTMLElement: " + typeof(ev.target));
