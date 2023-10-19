@@ -43,11 +43,11 @@
                     <input name="{{ opt.optionvalue__value }}_edit.available" type="checkbox" {% if opt.available %} checked="true" {% endif %} /><label>Available</label></br>
                     <input name="{{ opt.optionvalue__value }}_edit.default" type="checkbox" {% if opt.defaultoption %} checked="true" {% endif %} /><label>Default</label></br>
                 </form>
-                <button id="{{ opt.optionvalue__value }}_edit.submit" class="option_submit">Save</button></br>
+                <button id="{{ opt.optionvalue__value }}_edit.submit" class="switch_display">Save</button></br>
             </div>
-            <div id="{{ opt.optionvalue__value }}_display">
+            <div id="{{ opt.optionvalue__value }}_display" class="options_submit">
                 
-                <input {% if not opt.available %} disabled="true" onclick="this.checked=false" {% endif %} type="radio" name="{{ opt.option__name }}" value="{{ opt.optionvalue__value }}" {% if opt.defaultoption %} checked="true" {% endif %}><label {% if not opt.available %} style="color:lightgrey" {% endif %}>  {{ opt.optionvalue__value }}</label><button id="{{ key }}_edit.button" class="switch_edit">Edit</button></br>
+                <input class="{{ opt.option__name}} option_input" {% if not opt.available %} disabled="true" onclick="this.checked=false" {% endif %} type="radio" name="{{ opt.option__name }}" value="{{ opt.optionvalue__value }}" data-default="{{ opt.defaultoption }}" {% if opt.defaultoption %} checked="true" {% endif %}><label {% if not opt.available %} class="disabled" {% endif %}>  {{ opt.optionvalue__value }}</label><button id="{{ key }}_edit.button" class="switch_edit">Edit</button></br>
             </div>
             {% endfor %}
         </div>
@@ -59,4 +59,6 @@
 {% else %} 
 <p>No Options</p>
 {% endif %}
+<button id="submit_item">Submit Changes</button>
+<div id="test"></div>
 {% endblock %}

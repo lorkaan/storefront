@@ -1,19 +1,28 @@
 var edit_form_manager = function(){
 
     let id_type_name_sep = ".";  // This separates an identifier from a type
-    let option_key_sep = "_";   // This separates the variable from literals in option element ids
 
-    let edit_dom_key = "edit";
-    let display_dom_key = "display";
+    let option_submit_class = "options_submit";
+    let item_display_id = "item_display";
 
-    let option_submit_class = "option_submit";
+    let input_option_class = "option_input";
 
     let display_to_edit_class = "switch_edit";
     let edit_to_display_class = "switch_display"
 
-    let form_id_types = ["form", "submit", "container"]; // Order matters as name as 0 is important
+    function getElemValue(elem){
+        return elem.value;
+    }
 
-    let form_name_types = ["name", "available", "default"];
+    function getElemChecked(elem){
+        return elem.checked;
+    }
+
+    let get_option_form_data = {
+        "name": getElemValue,
+        "available": getElemChecked,
+        "default": getElemChecked
+    }
 
     function retrieve_suffix(val, sep="", squash_error_flag=false){
         if(utils.isString(val)){
@@ -116,6 +125,19 @@ var edit_form_manager = function(){
         this.checked = false;
     }
 
+    function handle_default(elem, default_value){
+        let option_name = elem.getAttribute("name");
+        let elem_list = document.querySelectorAll("."+ input_option_class +"." + option_name);
+        for(let i = 0; i < elem_list.length; i++){
+            if(utils.isObject(elem_list[i], HTMLElement) && elem_list[i].nodeName == "INPUT"){
+                elem_list[i].setAttribute("data-default", false);
+            }
+        }
+        if(utils.isBoolean(default_value)){
+            elem.setAttribute("data-default", true);
+        }
+    }
+
     function change_option_values(changed_values, display_parent){
         if(!utils.isObject(display_parent, HTMLElement)){
             throw new TypeError("Expected HTMLElement, but got: " + typeof(display_parent) + ", " + display_parent);
@@ -128,113 +150,24 @@ var edit_form_manager = function(){
                 if(display_parent.children[i].nodeName == "LABEL"){
                     display_parent.children[i].innerHTML = changed_values.get("name");
                     if(utils.toBoolean(changed_values.get("available"))){
-                        display_parent.children[i].classList.add("disabled");
-                    }else{
                         display_parent.children[i].classList.remove("disabled");
+                    }else{
+                        display_parent.children[i].classList.add("disabled");
                     }
                 }else if(display_parent.children[i].nodeName == "INPUT"){
                     display_parent.children[i].setAttribute("value", changed_values.get("name"));
                     display_parent.children[i].value = changed_values.get("name");
+                    handle_default(display_parent.children[i], changed_values.get("default"));
                     if(utils.toBoolean(changed_values.get("available"))){
                         display_parent.children[i].onclick = null;
                         display_parent.children[i].disabled = false;
+                        //display_parent.children[i].setAttribute("disabled", false);
                     }else{
                         display_parent.children[i].onclick = onclick_disabled;
                         display_parent.children[i].disabled = true;
                     }
                 }
             }
-        }
-    }
-
-    function get_new_name(old_id){
-        if(utils.isString(old_id)){
-            let old_full_id = [old_id, form_id_types[0]].join(id_type_name_sep);
-            let elem = document.getElementById(old_full_id);
-            if(utils.isObject(elem, HTMLFormElement)){
-                let inputs = elem.elements;
-                for(let i = 0; i < inputs.length; i++){
-                    if(utils.isString(inputs[i].getAttribute("name"))){
-                        return inputs[i].value;
-                    }
-                }
-            }
-        }
-    }
-
-    function change_ids(old_id, new_id){
-        if(!utils.isString(old_id) || !utils.isString(new_id)){
-            throw new TypeError("Expected Strings, got " + typeof(old_id) + ", " + typeof(new_id));
-        }
-        let cur_old_full_id = null;
-        let cur_new_full_id = null;
-        let cur_elem = null;
-        for(let i = 0; i < form_id_types.length; i ++){
-            cur_old_full_id = [old_id, form_id_types[i]].join(id_type_name_sep);
-            cur_new_full_id = [new_id, form_id_types[i]].join(id_type_name_sep);
-            if(utils.isString(cur_old_full_id) && utils.isString(cur_new_full_id)){
-                cur_elem = document.getElementById(cur_old_full_id);
-                if(utils.isObject(cur_elem, HTMLElement)){
-                    cur_elem.setAttribute("id", cur_new_full_id);
-                }else{
-                    throw new TypeError("Can not find an HTMLElement with id: " + cur_old_full_id);
-                }
-            }else{
-                throw new TypeError("Expected two strings, got: " + cur_old_full_id + ", " + cur_new_full_id);
-            }
-        }
-    }
-
-    function change_input_names(old_id, new_id){
-        if(!utils.isString(old_id) || !utils.isString(new_id)){
-            throw new TypeError("Expected Strings, got " + typeof(old_id) + ", " + typeof(new_id));
-        }
-        let form_id = [old_id, form_id_types[0]].join(id_type_name_sep);
-        let form_elem = document.getElementById(form_id);
-        if(!utils.isObject(form_elem, HTMLFormElement)){
-            throw new TypeError("Could not find the Form Element");
-        }
-        let cur = null;
-        let cur_name = null;
-        for(let i = 0; i < form_elem.elements.length; i++){
-            cur_name = form_elem.elements[i].getAttribute("name");
-            if(utils.isString(cur_name) && cur_name.startsWith(old_id)){
-                cur = cur_name.replace(old_id, new_id);
-                form_elem.elements[i].setAttribute("name", cur);
-            }else{
-                continue;
-            }
-        }
-    }
-
-    /** Replaces all the IDs with new ids indicating the name of the option.
-     * 
-     * DOES NOT CHECK FOR DUPLICATES
-     * 
-     * Come back and fix later (2.0)
-     * 
-     * @param {String} old_full_id ID of the button clicked which holds the current option name info
-     */
-    function change_name(old_full_id){
-        let old_id = retrieve_prefix(old_full_id, id_type_name_sep);
-        let old_option_name = retrieve_prefix(old_id, option_key_sep);
-        let new_name = get_new_name(old_id);
-        let new_id = old_id.replace(old_option_name, new_name);
-        change_input_names(old_id, new_id);
-        change_ids(old_id, new_id);
-        let display_elem = document.getElementById([old_option_name, display_dom_key].join(option_key_sep));
-        for(let i = 0; i < display_elem.children.length; i++){
-            if(utils.isObject(display_elem.children[i], HTMLElement)){
-                if(display_elem.children[i].nodeName == "LABEL"){
-                    display_elem.children[i].innerHTML = new_name;
-                }else if(display_elem.children[i].nodeName == "INPUT"){
-                    display_elem.children[i].setAttribute("value") = new_name;
-                    display_elem.children[i].value = new_name;
-                }
-            }
-        }
-        if(utils.isObject(display_elem, HTMLElement)){
-            display_elem.id = [new_name, display_dom_key].join(option_key_sep);
         }
     }
 
@@ -262,20 +195,6 @@ var edit_form_manager = function(){
         }
     }
 
-    function change_name_eventhandler(ev){
-        if(utils.isObject(ev.target, HTMLElement)){
-            let id = ev.target.getAttribute('id');
-            if(utils.isString(id)){
-                change_name(id);
-                switch_between_edit_display(ev.target, true);
-            }else{
-                throw new TypeError("Can not find the id: " + typeof(id) + " >> " + id);
-            }
-        }else{
-            throw new TypeError("Given target is not an HTMLElement");
-        }
-    }
-
     function display_to_edit_handler(next, ev){
         switch_between_edit_display(ev.target, next);
     }
@@ -288,11 +207,17 @@ var edit_form_manager = function(){
             for(let i = 0; i < parent.children.length; i++){
                 if(utils.isObject(parent.children[i], HTMLFormElement)){
                     let cur = null;
+                    let cur_key = null;
+                    let get_func = null;
                     for(let j = 0; j < parent.children[i].elements.length; j++){
                         if(utils.isObject(parent.children[i].elements[j], HTMLElement)){
                             cur = parent.children[i].elements[j].getAttribute("name");
                             if(utils.isString(parent.children[i].elements[j].nodeName, "INPUT")){
-                                change_handler.addChange(retrieve_suffix(cur, id_type_name_sep), parent.children[i].elements[j].value);
+                                cur_key = retrieve_suffix(cur, id_type_name_sep)
+                                get_func = get_option_form_data[cur_key];
+                                if(utils.isFunction(get_func)){
+                                    change_handler.addChange(cur_key,  get_func(parent.children[i].elements[j]));
+                                }
                             }else{
                                 continue;
                             }
@@ -317,16 +242,50 @@ var edit_form_manager = function(){
         }
     }
 
-    
+    function create_value_dict_from_option(elem){
+        let val_dict = {};
+        val_dict["name"] = elem.getAttribute("name");
+        val_dict["available"] = !elem.disabled;
+        val_dict["value"] = elem.value;
+        val_dict["default"] = elem.getAttribute("data-default");
+        return val_dict;
+    }
 
+    function submit_handler(ev){
+        let submit_values = {};
+        let elem = document.getElementById(item_display_id);
+        let cur_key = null;
+        for(let i = 0; i < elem.children.length; i++){
+            if(utils.isObject(elem.children[i], HTMLElement) && elem.children[i].nodeName != "BUTTON" && utils.isString(elem.children[i].getAttribute("name"), /^item\./)){
+                cur_key = retrieve_suffix(elem.children[i].getAttribute("name"), id_type_name_sep);
+                if(utils.isString(cur_key)){
+                    submit_values[cur_key] = elem.children[i].innerHTML;
+                }
+            }
+        }
+        submit_values["options"] = [];
+        let elem_collection = document.getElementsByClassName(option_submit_class);
+        for(let i = 0; i < elem_collection.length; i++){
+            if(utils.isObject(elem_collection[i], HTMLElement)){
+                for(let j = 0; j < elem_collection[i].children.length; j++){
+                    if(utils.isObject(elem_collection[i].children[j], HTMLElement)
+                        && elem_collection[i].children[j].nodeName == "INPUT"
+                        && utils.isString(elem_collection[i].children[j].getAttribute("type"), "radio")){
+                            submit_values["options"].push(create_value_dict_from_option(elem_collection[i].children[j]));
+                    }
+                }
+            }
+        }
+        elem = document.getElementById("test");
+        elem.innerHTML = JSON.stringify(submit_values);
+    }
     
 
     return {
-        "change_name_eventhandler": change_name_eventhandler,
         "display_to_edit_handler": display_to_edit_handler,
         "edit_to_display_handler": edit_to_display_handler,
+        "submit_handler": submit_handler,
         "Class":{
-            "OptionSubmit": option_submit_class,
             "SwitchDisplayToEdit": display_to_edit_class,
             "SwitchEditToDisplay": edit_to_display_class
         }
