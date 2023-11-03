@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+<h1>Testing Page</h1>
+</br>
+<p>This is for easy display for testing purposes.</p>
+</br>
+</br>
+<a href="{% url 'items' %}">List of Test Item Display Views</a>
+</br>
+<a href="{% url 'cms_items' %}">List of Test Item Edit Views</a>
+{% endblock %}

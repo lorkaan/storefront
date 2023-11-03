@@ -8,6 +8,9 @@ from utils.utils import merge_dictionary_list
 
 from .forms import ItemEditForm, ItemOptionValueForm
 
+def home(request):
+    return render(request, "home.html")
+
 # Create your views here.
 
 class ItemListView(generic.ListView):

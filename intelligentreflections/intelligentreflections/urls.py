@@ -23,17 +23,16 @@ from django.conf.urls import include
 
 from django.views.static import serve # Test to see if I can serve
 
-from items.views import ItemListView, ItemDetailsView, EditItemDetailsView, CmsItemListView, CmsItemDetailsView, CMSItemUploadView, TestItemCMSView
+from items.views import home, ItemListView, ItemDetailsView, EditItemDetailsView, CmsItemListView, CmsItemDetailsView, CMSItemUploadView, TestItemCMSView
 
 urlpatterns = [
+    path('', home),
     path('admin/', admin.site.urls),
     path('items/', ItemListView.as_view(), name='items'),
     path('item/<int:item_id>', ItemDetailsView.as_view(), name='item'),
+    # Nope
     path('cms_items/', CmsItemListView.as_view(), name='cms_items'),
     path('cms_item/<int:item_id>', EditItemDetailsView.as_view(), name='cms_item'),
-    path("test/cms_item/<int:item_id>", TestItemCMSView.as_view(), name="test_itemoptionvalue"),
-    path("test/cms/<int:item_id>", TestItemCMSView.as_view(), name="test_cms"),
-    path('cms_upload', CMSItemUploadView.as_view(), name="cms_upload"),
     path('accounts/', include('django.contrib.auth.urls'))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) \
   + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) # Remove for production
