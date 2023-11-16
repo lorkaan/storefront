@@ -5,3 +5,13 @@
 .disabled{
     color:lightgrey;
 }
+
+#submit_item{
+    margin-top:10px;
+}
+
+#new_option_values{
+    margin-left: 30px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}

@@ -59,6 +59,25 @@
 {% else %} 
 <p>No Options</p>
 {% endif %}
+<div id="add_option_container">
+    <form id="new_option_form">
+        <label>Name</label><input name="new_option.name" type="text" value=""/><br>
+        <ul id="new_option_list">
+            <li>
+                <div>
+                    <label>Value</label><input name="new_option.value_name" type="text" value=""/><br>
+                    <input name="" type="checkbox" /><label>Available</label></br>
+                    <input name="" type="checkbox" /><label>Default</label>
+                </div>
+            </li>
+        </ul>
+        <button id="add_new_option_value">New Value</button>
+    </form>
+</div>
+<div id="add_option_button_container">
+    <button id="add_option_button">Add Option</button>
+</div>
+</br>
 <button id="submit_item">Submit Changes</button>
 <div id="test"></div>
 {% endblock %}
