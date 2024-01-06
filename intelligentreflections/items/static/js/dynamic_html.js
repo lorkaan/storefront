@@ -106,6 +106,10 @@ var dynamic_html = function(){ // just to stop the auto filter for now
 
         static NodeName = null;
 
+        static isValidAttribute(value){
+            return (utils.isString(value) || utils.isNumber(value) || utils.isBoolean(value));
+        }
+
         constructor(id=null, cls=null, attrs={}, events={}){
             if(utils.isString(id)){
                 this.id = id;
@@ -139,6 +143,28 @@ var dynamic_html = function(){ // just to stop the auto filter for now
             }
         }
 
+        addClass(cls){
+            if(utils.isString(cls) || utils.isArray(cls)){
+                if(utils.isArray(this.cls)){
+                    if(utils.isArray(cls)){
+                        this.cls.concat(cls);
+                    }else{
+                        this.cls.push(cls);
+                    }
+                }else if(utils.isString(this.cls)){
+                    let temp = [];
+                    temp.push(this.cls);
+                    temp.push(cls);
+                    this.cls = temp;
+                }else{
+                    this.cls = cls;
+                }
+                return true;
+            }else{
+                return false;
+            }
+        }
+
         /** Just a convient way to set class */
         setClass(cls){
             if(utils.isString(cls) || utils.isArray(cls)){
@@ -149,10 +175,34 @@ var dynamic_html = function(){ // just to stop the auto filter for now
             }
         }
 
+        addEvent(type, handler_func){
+            if(utils.isString(type) && utils.isFunction(handler_func)){
+                if(!utils.isObject(this.events)){
+                    this.events = {};
+                }
+                this.events[type] = value;
+                return true;
+            }else{
+                return false;
+            }
+        }
+
         /** Just a convient way to set events */
         setEvents(events){
             if(utils.isObject(events)){
                 this.events = events;
+                return true;
+            }else{
+                return false;
+            }
+        }
+
+        addAttribute(key, value){
+            if(utils.isString(key) && this.constructor.isValidAttribute(value)){
+                if(!utils.isObject(this.attrs)){
+                    this.attrs = {};
+                }
+                this.attrs[key] = value;
                 return true;
             }else{
                 return false;
@@ -197,7 +247,7 @@ var dynamic_html = function(){ // just to stop the auto filter for now
         addEventListersToElem(elem){
             if(utils.isObject(elem, HTMLElement) && utils.isObject(this.events)){
                 for(let [key, value] in Object.entries(this.events)){
-                    if(utils.isFunction(value)){
+                    if(utils.isString(key) && utils.isFunction(value)){
                         elem.addEventListener(key, value);
                     }else{
                         continue;
@@ -214,8 +264,8 @@ var dynamic_html = function(){ // just to stop the auto filter for now
         addAttributesToElem(elem){
             if(utils.isObject(elem, HTMLElement) && utils.isObject(this.attrs)){
                 for(let [key, value] in Object.entries(this.attrs)){
-                    if(utils.isString(value) || utils.isNumber(value) || utils.isBoolean(value)){
-                        elem.addEventListener(key, value);
+                    if(utils.isString(key) && this.constructor.isValidAttribute(val)){
+                        elem.setAttribute(key, value);
                     }else{
                         continue;
                     }
