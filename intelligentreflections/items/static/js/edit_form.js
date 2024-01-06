@@ -8,7 +8,27 @@ var edit_form_manager = function(){
     let input_option_class = "option_input";
 
     let display_to_edit_class = "switch_edit";
-    let edit_to_display_class = "switch_display"
+    let edit_to_display_class = "switch_display";
+
+    let options_label_class = "options_label";
+
+    let elem_attrs = {
+        edit_container: {
+            selector: 'div[id$="_edit.container]"',
+        },
+        edit_form: {
+            selector: 'form[id$="_edit.form]"',
+        },
+        edit_name: {
+            selector: 'input[name$="_edit.name"]',
+        },
+        edit_available: {
+            selector: 'input[name$="_edit.available"]',
+        },
+        edit_default: {
+            selector: 'input[name$="_edit.default"]',
+        }
+    };
 
     function getElemValue(elem){
         return elem.value;
@@ -242,9 +262,26 @@ var edit_form_manager = function(){
         }
     }
 
+    function find_li_parent(elem){
+        let cur = elem;
+        while(utils.isObject(cur, HTMLElement) && cur.nodeName != "LI"){
+            cur = cur.parentElement;
+        }
+        if(utils.isObject(cur, HTMLElement)){
+            return cur;
+        }else{
+            return null;
+        }
+    }
+
     function create_value_dict_from_option(elem){
+        let li_parent = find_li_parent(elem);
+        if(li_parent == null){
+            throw new TypeError("Could not find the parent LI element for: " + elem);
+        }
+        let option_name_elem = li_parent.querySelector("." + options_label_class);
         let val_dict = {};
-        val_dict["name"] = elem.getAttribute("name");
+        val_dict["name"] = option_name_elem.innerHTML;
         val_dict["available"] = !elem.disabled;
         val_dict["value"] = elem.value;
         val_dict["default"] = elem.getAttribute("data-default");
@@ -279,11 +316,23 @@ var edit_form_manager = function(){
         elem = document.getElementById("test");
         elem.innerHTML = JSON.stringify(submit_values);
     }
+
+    function switch_to_option_display(ev){
+        let target = ev.target;
+        let inputElem = target.previousElementSibling;
+        let parent = target.parentElement;
+        let parent_parent = parent.parentElement;
+        let labelElem = parent_parent.querySelector("." + options_label_class);
+        labelElem.innerHTML = inputElem.value;
+        parent.style = "display:none;";
+        parent.nextElementSibling.style = "display:block;";
+    }
     
 
     return {
         "display_to_edit_handler": display_to_edit_handler,
         "edit_to_display_handler": edit_to_display_handler,
+        "option_save_handler": switch_to_option_display,
         "submit_handler": submit_handler,
         "Class":{
             "SwitchDisplayToEdit": display_to_edit_class,

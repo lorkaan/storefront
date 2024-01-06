@@ -35,26 +35,48 @@
     {% for key, elem in options.items %}
     <li class="no_list">
         <div>
-            <p>{{ key }}</p>
-            {% for opt in elem %}
-            <div id="{{ opt.optionvalue__value }}_edit.container" style="display:none;">
-                <form id="{{ opt.optionvalue__value }}_edit.form">
-                    <input name="{{ opt.optionvalue__value }}_edit.name" type="text" value="{{ opt.optionvalue__value }}"/></br>
-                    <input name="{{ opt.optionvalue__value }}_edit.available" type="checkbox" {% if opt.available %} checked="true" {% endif %} /><label>Available</label></br>
-                    <input name="{{ opt.optionvalue__value }}_edit.default" type="checkbox" {% if opt.defaultoption %} checked="true" {% endif %} /><label>Default</label></br>
-                </form>
-                <button id="{{ opt.optionvalue__value }}_edit.submit" class="switch_display">Save</button></br>
+            <div class="option_container">
+                <div class="edit_option_container" style="display:none;">
+                    <input name="option_name" type="text" value="{{ key  }}"/>
+                    <button class="switch_display_option">Save</button>
+                </div>
+                <div class="option_display">
+                    <label class="options_label">{{ key }}</label> 
+                    <button class="switch_edit">Edit</button>
+                </div>
             </div>
-            <div id="{{ opt.optionvalue__value }}_display" class="options_submit">
-                
-                <input class="{{ opt.option__name}} option_input" {% if not opt.available %} disabled="true" onclick="this.checked=false" {% endif %} type="radio" name="{{ opt.option__name }}" value="{{ opt.optionvalue__value }}" data-default="{{ opt.defaultoption }}" {% if opt.defaultoption %} checked="true" {% endif %}><label {% if not opt.available %} class="disabled" {% endif %}>  {{ opt.optionvalue__value }}</label><button id="{{ key }}_edit.button" class="switch_edit">Edit</button></br>
+            {% for opt in elem %}
+            <div class="option_value_container">
+                <div class="edit_option_container" style="display:none;">
+                    <form class="edit_option_form" >
+                        <!--
+                        <input name="{{ opt.optionvalue__value }}_edit.name" type="text" value="{{ opt.optionvalue__value }}"/></br>
+                        <input name="{{ opt.optionvalue__value }}_edit.available" type="checkbox" {% if opt.available %} checked="true" {% endif %} /><label>Available</label></br>
+                        <input name="{{ opt.optionvalue__value }}_edit.default" type="checkbox" {% if opt.defaultoption %} checked="true" {% endif %} /><label>Default</label></br>
+                        -->
+                        <input name="name" type="text" value="{{ opt.optionvalue__value }}"/></br>
+                        <input name="available" type="checkbox" {% if opt.available %} checked="true" {% endif %} /><label>Available</label></br>
+                        <input name="default" type="checkbox" {% if opt.defaultoption %} checked="true" {% endif %} /><label>Default</label></br>
+                    </form>
+                    <button id="{{ opt.optionvalue__value }}_edit.submit" class="switch_display">Save</button></br>
+                </div>
+                <div class="options_submit display">
+                    <!--
+                        <input class="{{ opt.option__name}} option_input" {% if not opt.available %} disabled="true" onclick="this.checked=false" {% endif %} type="radio" name="{{ opt.option__name }}" value="{{ opt.optionvalue__value }}" data-default="{{ opt.defaultoption }}" {% if opt.defaultoption %} checked="true" {% endif %}><label {% if not opt.available %} class="disabled" {% endif %}>  {{ opt.optionvalue__value }}</label><button id="{{ key }}_edit.button" class="switch_edit">Edit</button></br>
+                    -->
+                    <input class="option_input" {% if not opt.available %} disabled="true" onclick="this.checked=false" {% endif %} type="radio" name="display_selection" value="{{ opt.optionvalue__value }}" data-default="{{ opt.defaultoption }}" {% if opt.defaultoption %} checked="true" {% endif %}><label {% if not opt.available %} class="disabled" {% endif %}>  {{ opt.optionvalue__value }}</label><button class="switch_edit">Edit</button></br>
+                </div>
             </div>
             {% endfor %}
+            <button id="add_option_value_button">Add Value</button>
         </div>
     </li>
     {% empty %}
-    <li>Unable to Find Item and Options</li>
+    <li class="no_list" id="empty_list_item">Unable to Find Item and Options</li>
     {% endfor %}
+    <li class="no_list">
+        <button id="add_option_button">Add Option</button>
+    </li>
 </ul>
 {% else %} 
 <p>No Options</p>

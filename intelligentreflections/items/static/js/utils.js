@@ -289,6 +289,17 @@
     function isEmptyString(obj){
       return typeof(obj) === 'string' && !isString(obj);
     }
+
+    /** Mixin Builder for using multiple inheritance */
+    class MixinBuilder{
+      constructor(superclass){
+        this.superclass = superclass;
+      }
+
+      with(...mixins){
+        return mixins.reduce((c, mixin) => mixin(c), this.superclass);
+      }
+    }
   
     /* Functions exposed to the public (or to the utils scope) by this library. */
     return {
@@ -303,7 +314,10 @@
       'isEmptyString': isEmptyString,
       'isPositiveInteger': isPositiveInteger,
       'isSubClass': isSubClass,
-      'isNull': isNull
-    }
+      'isNull': isNull,
+      'mix': function(superclass){
+        return new MixinBuilder(superclass);
+      }
+    };
   
   }();
