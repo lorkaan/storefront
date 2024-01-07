@@ -101,7 +101,6 @@ var restutils = function(){
         } else {
             throw new TypeError("crsf token could not be retrieved");
         }
-
     }
 
     return {

@@ -110,7 +110,7 @@ var dynamic_html = function(){ // just to stop the auto filter for now
             return (utils.isString(value) || utils.isNumber(value) || utils.isBoolean(value));
         }
 
-        constructor(id=null, cls=null, attrs={}, events={}){
+        constructor(id=null, cls=null, events={}, attrs={}){
             if(utils.isString(id)){
                 this.id = id;
             }else{
@@ -455,6 +455,18 @@ var dynamic_html = function(){ // just to stop the auto filter for now
             }
         }
 
+        addChild(node){
+            if(utils.isArray(this.nodes)){
+                if(utils.isObject(node, HtmlNode) && utils.isString(node.constructor.NodeName)){
+                    this.nodes.push(node);
+                }else{
+                    throw new TypeError("Can not add type " + typeof(node));
+                }
+            }else{
+                throw new TypeError("Expected nodes to be an array, got " + typeof(this.nodes));
+            }
+        }
+
         _setupElement(elem){
             let cur = null;
             for(let i = 0; i < this.nodes.length; i++){
@@ -465,6 +477,7 @@ var dynamic_html = function(){ // just to stop the auto filter for now
                     continue;
                 }
             }
+            super._setupElement(elem);
         }
     }
 
