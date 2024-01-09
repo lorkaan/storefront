@@ -1,3 +1,5 @@
+/** DEPRECIATED */
+
 var edit_form_manager = function(){
 
     let id_type_name_sep = ".";  // This separates an identifier from a type

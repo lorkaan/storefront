@@ -3,14 +3,34 @@ var setup_page = function(){
     let item_edit_button_id = "item_edit.button"
     let item_save_button_id = "item_info_save";
 
+    let item_add_option_id = "add_option_button";
+
     let request_options_url = "options";
 
     let parents_options_container_id = "option_list_div";
 
+    let submit_button_id = "submit_item";
+    let item_display_id = "item_display";
+    let option_submit_class = html_nodes.EditOptionValueForm.classes.parent;
+
+    function add_new_option_handler(ev){
+        let target = ev.target;
+        let parent = target.parentElement;
+        let new_node = new html_nodes.FullOptionContainer();
+        parent.insertBefore(new_node.createElement(), target);
+    }
+
     function create_options_list(opt_list){
-        console.log(opt_list);
-        console.log(utils.isArray(opt_list));
-        let elem = document.getElementById(parents_options_container_id);
+        let add_option_button = document.getElementById(item_add_option_id);
+        if(!utils.isObject(add_option_button, HTMLElement)){
+            throw new Error("Can not find the Add Option button");
+        }
+        add_option_button.addEventListener("click", add_new_option_handler);
+        let elem = document.getElementById(submit_button_id);
+        elem.addEventListener("click", form_functions.submit_handler.bind(null, item_display_id, option_submit_class));
+
+
+        elem = document.getElementById(parents_options_container_id);
         if(utils.isObject(elem, HTMLElement) && utils.isObject(opt_list)){
             let nodes = [];
             let opt_keys = Object.keys(opt_list);
@@ -19,7 +39,8 @@ var setup_page = function(){
             }
             nodes.forEach(function(node){
                 if(utils.isObject(node, dynamic_html.abstractNode)){
-                    elem.appendChild(node.createElement());
+                    elem.insertBefore(node.createElement(), add_option_button);
+                    //elem.appendChild(node.createElement());
                 }    
             });
         }

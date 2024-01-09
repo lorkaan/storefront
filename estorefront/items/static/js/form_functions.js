@@ -22,24 +22,6 @@ var form_functions = function(){
         "item.price": getElemValue
     }
 
-    // Don't think this is needed anymore
-    function retrieve_suffix(val, sep="", squash_error_flag=false){
-        if(utils.isString(val)){
-            let text_list = val.split(sep);
-            if(utils.isArray(text_list, 1)){
-                return text_list[(text_list.length-1)];
-            }else{
-                return val;
-            }
-        }else{
-            if(utils.toBoolean(squash_error_flag)){
-                return null;
-            }else{
-                throw new TypeError("Can not retrieve suffix for non-string: " + typeof(val));
-            }
-        }
-    }
-
     class ChangeValueHandler{
 
         static validate(value){
@@ -241,10 +223,47 @@ var form_functions = function(){
         }
     }
 
+    function create_value_dict_from_option(elem){
+        let val_dict = {};
+        if(utils.isObject(elem, HTMLFormElement)){
+            let get_func = null;
+            let elems = elem.elements;
+            for(let i = 0; i < elems.length; i++){
+                get_func = get_option_form_data[elems[i].name];
+                if(utils.isFunction(get_func)){
+                    val_dict[elems[i].name] = get_func(elems[i]); // Needs to work with 
+                }
+            }
+        }
+        return val_dict
+    }
+
+    function submit_changes_handler(item_display_id, option_submit_class, ev){
+        let submit_values = {};
+        let elem = document.getElementById(item_display_id);
+        let cur_key = null;
+        for(let i = 0; i < elem.children.length; i++){
+            if(utils.isObject(elem.children[i], HTMLElement) && elem.children[i].nodeName != "BUTTON" && utils.isString(elem.children[i].getAttribute("name"), /^item\./)){
+                cur_key = elem.children[i].getAttribute("name");
+                if(utils.isString(cur_key)){
+                    submit_values[cur_key] = elem.children[i].innerHTML;
+                }
+            }
+        }
+        submit_values["options"] = [];
+        let elem_collection = document.getElementsByClassName(option_submit_class);
+        for(let i = 0; i < elem_collection.length; i++){
+            submit_values["options"].push(create_value_dict_from_option(elem_collection[i]));
+        }
+        elem = document.getElementById("test");
+        elem.innerHTML = JSON.stringify(submit_values);
+    }
+
     return {
         "display_to_edit_handler": display_to_edit_handler,
         "edit_to_display_handler": edit_to_display_handler,
         "edit_to_display_option_handler": switch_to_option_display,
+        "submit_handler": submit_changes_handler,
         "Class":{
             "Show": classes.show,
             "Hide": classes.hide

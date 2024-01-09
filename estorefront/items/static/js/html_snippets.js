@@ -38,7 +38,7 @@ var html_nodes = function(){
         static classes = {
             input: "options_label",
             button: "switch_display_option",
-            parent: "edit_option_container"
+            parent: "edit_option_container",
         };
 
         static input = {
@@ -57,7 +57,7 @@ var html_nodes = function(){
          */
         constructor(text, extra_cls=[]){
             super([
-                new dynamic_html.nodes.input(OptionEditNode.input.type, OptionEditNode.input.name, text),
+                new dynamic_html.nodes.input(OptionEditNode.input.type, OptionEditNode.input.name, text, null, OptionEditNode.classes.input),
                 new dynamic_html.nodes.button("Save", null, OptionEditNode.classes.button,
                     OptionEditNode.events.button
                 )
@@ -115,7 +115,7 @@ var html_nodes = function(){
             parent: "edit_option_form"
         };
 
-        constructor(name_val, available_val, default_val){
+        constructor(name_val="", available_val=true, default_val=false){
             available_val = utils.toBoolean(available_val);
             default_val = utils.toBoolean(default_val);
             let availableAttrs = {};
@@ -154,7 +154,7 @@ var html_nodes = function(){
             }
         };
 
-        constructor(name_val, available_val, default_val, extra_cls=[]){
+        constructor(name_val="", available_val=true, default_val=false, extra_cls=[]){
             super([
                 new EditOptionValueForm(name_val, available_val, default_val),
                 new dynamic_html.nodes.break,
@@ -173,7 +173,7 @@ var html_nodes = function(){
         };
 
         static classes = {
-            parent: "",
+            parent: "options_submit",
             disabled: "disabled"
         };
 
@@ -183,7 +183,7 @@ var html_nodes = function(){
             }
         };
 
-        constructor(input_name, name_val, available_val, default_val, extra_cls=[]){
+        constructor(input_name, name_val="", available_val=true, default_val=false, extra_cls=[]){
             available_val = utils.toBoolean(available_val);
             default_val = utils.toBoolean(default_val);
             let inputAttrs = {};
@@ -218,7 +218,7 @@ var html_nodes = function(){
             parent: "option_value_container"
         };
 
-        constructor(input_name, name_val, available_val, default_val, edit_flag=false){
+        constructor(input_name, name_val="", available_val=true, default_val=false, edit_flag=false){
             let option_edit_class = null;
             let option_display_class = null
             if(utils.toBoolean(edit_flag) || !utils.isString(name_val)){
@@ -238,6 +238,24 @@ var html_nodes = function(){
     class FullOptionContainer extends dynamic_html.nodes.div{
 
         static keys = ['optionvalue__value', 'available', 'defaultoption'];
+
+        static classes = {
+            button: ""
+        };
+
+        static events = {
+            button: {
+                'click': function(ev){
+                    let target = ev.target;
+                    let parent = target.parentElement;
+                    let input_elem = parent.querySelector("." + OptionEditNode.classes.input);
+                    if(utils.isObject(input_elem, HTMLElement)){
+                        let new_elem = new OptionValueContainer(input_elem.value);
+                        parent.insertBefore(new_elem.createElement(), target);
+                    }
+                }
+            }
+        };
 
         static create_option_value_container(header_name, obj){
             if(utils.isObject(obj, this.keys)){
@@ -267,6 +285,9 @@ var html_nodes = function(){
                     continue;
                 }
             }
+            nodes.push(new dynamic_html.nodes.button("Add Value", null, FullOptionContainer.classes.button,
+                FullOptionContainer.events.button
+            ));
             super(nodes);
         }
     }
@@ -274,7 +295,8 @@ var html_nodes = function(){
 
     return {
         "OptionValueContainer": OptionValueContainer,
-        "FullOptionContainer": FullOptionContainer
+        "FullOptionContainer": FullOptionContainer,
+        "EditOptionValueForm": EditOptionValueForm
     };
 
 }();
