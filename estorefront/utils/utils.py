@@ -19,3 +19,4 @@ def merge_dictionary_list(dict_list):
         return result
     else:
         return {}
+

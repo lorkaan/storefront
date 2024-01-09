@@ -23,13 +23,14 @@ from django.conf.urls import include
 
 from django.views.static import serve # Test to see if I can serve
 
-from items.views import home, ItemListView, ItemDetailsView, EditItemDetailsView, CmsItemListView, CmsItemDetailsView, CMSItemUploadView, TestItemCMSView
+from items.views import home, ItemToOptionsHandler, ItemListView, ItemDetailsView, EditItemDetailsView, CmsItemListView, CmsItemDetailsView, CMSItemUploadView, TestItemCMSView
 
 urlpatterns = [
     path('', home),
     path('admin/', admin.site.urls),
     path('items/', ItemListView.as_view(), name='items'),
     path('item/<int:item_id>', ItemDetailsView.as_view(), name='item'),
+    path('cms_item/options', ItemToOptionsHandler.run, name='item_options'),
     # Nope
     path('cms_items/', CmsItemListView.as_view(), name='cms_items'),
     path('cms_item/<int:item_id>', EditItemDetailsView.as_view(), name='cms_item'),

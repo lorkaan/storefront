@@ -1,24 +1,27 @@
 {% extends "base.html" %}
 
 {% block header %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/edit_form.css' %}"/>
 <script src="{% static 'js/utils.js' %}"></script>
+<script src="{% static 'js/form_functions.js' %}"></script>
 <script src="{% static 'js/dynamic_html.js' %}"></script>
 <script src="{% static 'js/html_snippets.js' %}"></script>
 <script src="{% static 'js/rest_utils.js' %}"></script>
 
-<script src="{% 'js/setup_page.js' %}"></script>
+<script src="{% static 'js/setup_page.js' %}"></script>
 {% endblock %}
 
 {% block content %}
-<div id="item_edit" style="display:none;">
+<div id="item_edit" class="hide">
     <form id="" method="POST" action="">
         <label>Name</label><input name="item.name" type="text" value="{{ item.name }}"/><br>
         <label>Description</label><input name="item.description" type="text" value="{{ item.description }}"/><br>
         <label>Price</label><input name="item.price" type="number" value="{{ item.price }}"/><br>
     </form>
-    <button id="" class="switch_display">Save</button></br>
+    <button id="item_info_save" class="switch_display">Save</button></br>
 </div>
-<div id="item_display">
+<div id="item_display" class="show">
     <h3 name="item.name">{{ item.name }}</h3>
     <p name="item.description">{{ item.description }}</p>
     <p name="item.price">{{ item.price }}</p>

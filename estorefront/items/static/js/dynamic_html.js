@@ -246,9 +246,10 @@ var dynamic_html = function(){ // just to stop the auto filter for now
          */
         addEventListersToElem(elem){
             if(utils.isObject(elem, HTMLElement) && utils.isObject(this.events)){
-                for(let [key, value] in Object.entries(this.events)){
-                    if(utils.isString(key) && utils.isFunction(value)){
-                        elem.addEventListener(key, value);
+                let keys = Object.keys(this.events);
+                for(let i = 0; i < keys.length; i++){
+                    if(utils.isString(keys[i]) && utils.isFunction(this.events[keys[i]])){
+                        elem.addEventListener(keys[i], this.events[keys[i]]);
                     }else{
                         continue;
                     }
@@ -263,9 +264,10 @@ var dynamic_html = function(){ // just to stop the auto filter for now
          */
         addAttributesToElem(elem){
             if(utils.isObject(elem, HTMLElement) && utils.isObject(this.attrs)){
-                for(let [key, value] in Object.entries(this.attrs)){
-                    if(utils.isString(key) && this.constructor.isValidAttribute(val)){
-                        elem.setAttribute(key, value);
+                let keys = Object.keys(this.attrs);
+                for(let i = 0; i < keys.length; i++){
+                    if(utils.isString(keys[i]) && this.constructor.isValidAttribute(this.attrs[keys[i]])){
+                        elem.setAttribute(keys[i], this.attrs[keys[i]]);
                     }else{
                         continue;
                     }
@@ -303,7 +305,7 @@ var dynamic_html = function(){ // just to stop the auto filter for now
         createElement(){
             if(utils.isString(this.constructor.NodeName)){
                 let elem = document.createElement(this.constructor.NodeName.toUpperCase());
-                if(utils.isObject(elem, HtmlElement)){
+                if(utils.isObject(elem, HTMLElement)){
                     this._setupElement(elem);
                     return elem;
                 }else{
@@ -336,7 +338,7 @@ var dynamic_html = function(){ // just to stop the auto filter for now
     /** Mixin for including Text between the HTML Tags
      * 
      */
-    class InnerTextMixin{
+    class InnerTextMixin extends HtmlNode{
 
         constructor(text, ...args){
             super(...args);
@@ -356,7 +358,7 @@ var dynamic_html = function(){ // just to stop the auto filter for now
      * Each key, value pair in the dictionary represents the event type 
      * and handler function respectively
      */
-    class ButtonNode extends utils.mix(HtmlNode).with(InnerTextMixin){
+    class ButtonNode extends InnerTextMixin{
 
         static NodeName = nodeNames.button;
         
@@ -368,7 +370,7 @@ var dynamic_html = function(){ // just to stop the auto filter for now
     /** Represents a Label HTML Element
      * 
      */
-    class LabelNode extends utils.mix(HtmlNode).with(InnerTextMixin){
+    class LabelNode extends InnerTextMixin{
         
         static NodeName = nodeNames.label;
 
@@ -444,7 +446,7 @@ var dynamic_html = function(){ // just to stop the auto filter for now
      * for other HTML Elements. Such uses are divs and forms.
      * 
      */
-    class ContainerMixin {
+    class ContainerMixin extends HtmlNode{
 
         constructor(nodes=[], ...args){
             super(...args);
@@ -491,7 +493,7 @@ var dynamic_html = function(){ // just to stop the auto filter for now
      *      - name
      * 
      */
-    class FormNode extends utils.mix(HtmlNode).with(ContainerMixin){
+    class FormNode extends ContainerMixin{
 
         static NodeName = nodeNames.form;
 
@@ -504,7 +506,7 @@ var dynamic_html = function(){ // just to stop the auto filter for now
      * (represented by HtmlNode objects) and will create all when requested.
      * 
      */
-    class DivNode extends utils.mix(HtmlNode).with(ContainerMixin){
+    class DivNode extends ContainerMixin{
 
         static NodeName = nodeNames.container;
         

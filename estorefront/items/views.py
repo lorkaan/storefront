@@ -1,7 +1,8 @@
+import json
 from django.shortcuts import render
 from django.views import generic, View
 
-from django.http import Http404, JsonResponse
+from django.http import Http404, JsonResponse, HttpResponse
 
 from .models import Item, Option, OptionValue, ItemOptionValue, ItemOptionValueImage
 from utils.utils import merge_dictionary_list
@@ -12,6 +13,56 @@ def home(request):
     return render(request, "home.html")
 
 # Create your views here.
+class JsonInputHandler:
+
+    @classmethod
+    def post_input(cls, request):
+        return HttpResponse(status=500)
+
+    @classmethod
+    def get_input(cls, request):
+        return HttpResponse(status=403)
+
+    @classmethod
+    def run(cls, request):
+        if request.method == 'POST':
+            return cls.post_input(request)
+        else:
+            return cls.get_input(request)
+
+class ItemToOptionsHandler(JsonInputHandler):
+
+    item_id_key = "item_id"
+
+    @classmethod
+    def post_input(cls, request):
+        data = json.loads(request.body)
+        item_id = data[cls.item_id_key]
+        try:
+            custom_options = list(ItemOptionValue.objects.filter(item__id=item_id).order_by("option__name").values("id", "option__name", "optionvalue__value", "available", "defaultoption"))
+        except ItemOptionValue.DoesNotExist:
+            raise Http404("Item has no options")
+        name = None
+        options_dict = {}
+        cur_dict = {}
+        for custom_dict in custom_options:
+            if custom_dict["option__name"] != name:
+                name = custom_dict["option__name"]
+                options_dict[name] = []
+            cur_dict = custom_dict.copy()
+            '''
+            Removed because it is an QuerySet Object being returned 
+
+            try:
+                pic_queryset = ItemOptionValueImage.objects.filter(itemoptionvalue__id=custom_dict['id'])
+            except ItemOptionValueImage.DoesNotExist:
+                pic_queryset = []
+            cur_dict["pics"] = pic_queryset
+            '''
+            options_dict[name].append(cur_dict)
+        return JsonResponse(options_dict)
+
+# Old Stuff
 
 class ItemListView(generic.ListView):
     model = Item
@@ -51,7 +102,8 @@ class ItemDetailsView(View):
         return render(request, self.__class__.template_name, {"item": item, "options": options_dict})
 
 class EditItemDetailsView(ItemDetailsView):
-    template_name = "test/test_itemoptionvalue_form.html"
+    #template_name = "test/test_itemoptionvalue_form.html"
+    template_name = "cms/cms_item.html"
 
 
 class CmsItemDetailsView(ItemDetailsView):

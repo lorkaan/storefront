@@ -16,7 +16,7 @@ var html_nodes = function(){
 
         static events = {
             button: {
-                "click": function(ev){}
+                "click": form_functions.display_to_edit_handler.bind(null, false)
             }
         };
 
@@ -48,7 +48,7 @@ var html_nodes = function(){
 
         static events = {
             button: {
-                "click": function(ev){}
+                "click": form_functions.edit_to_display_option_handler
             }
         };
 
@@ -75,6 +75,8 @@ var html_nodes = function(){
         };
 
         constructor(text=null, edit_flag=false){
+            let option_edit_class = null;
+            let option_display_class = null
             if(utils.toBoolean(edit_flag) || !utils.isString(text)){
                 option_edit_class = OptionContainer.classes.show;
                 option_display_class = OptionContainer.classes.hide;
@@ -114,14 +116,25 @@ var html_nodes = function(){
         };
 
         constructor(name_val, available_val, default_val){
-
+            available_val = utils.toBoolean(available_val);
+            default_val = utils.toBoolean(default_val);
+            let availableAttrs = {};
+            let defaultAttrs = {};
+            if(available_val){
+                availableAttrs['checked'] = true;
+            }
+            if(default_val){
+                defaultAttrs['checked'] = true;
+            }
             super([
                 new dynamic_html.nodes.input(EditOptionValueForm.inputs.name.type, EditOptionValueForm.inputs.name.name, name_val),
                 new dynamic_html.nodes.break,
-                new dynamic_html.nodes.input(EditOptionValueForm.inputs.available.type, EditOptionValueForm.inputs.available.name, available_val),
+                new dynamic_html.nodes.input(EditOptionValueForm.inputs.available.type, EditOptionValueForm.inputs.available.name, available_val,
+                    null, null, null, availableAttrs),
                 new dynamic_html.nodes.label(capitalize(EditOptionValueForm.inputs.available.name)),
                 new dynamic_html.nodes.break,
-                new dynamic_html.nodes.input(EditOptionValueForm.inputs.default.type, EditOptionValueForm.inputs.default.name, default_val),
+                new dynamic_html.nodes.input(EditOptionValueForm.inputs.default.type, EditOptionValueForm.inputs.default.name, default_val, 
+                    null, null, null, defaultAttrs),
                 new dynamic_html.nodes.label(capitalize(EditOptionValueForm.inputs.default.name))
             ], null, EditOptionValueForm.classes.parent);
         }
@@ -137,7 +150,7 @@ var html_nodes = function(){
 
         static events = {
             button: {
-                "click": function(ev){}
+                "click": form_functions.edit_to_display_handler
             }
         };
 
@@ -159,21 +172,40 @@ var html_nodes = function(){
             name: ""
         };
 
-        constructor(name_val, available_val, default_val, extra_cls=[]){
+        static classes = {
+            parent: "",
+            disabled: "disabled"
+        };
+
+        static events = {
+            button: {
+                "click": form_functions.display_to_edit_handler.bind(null, false)
+            }
+        };
+
+        constructor(input_name, name_val, available_val, default_val, extra_cls=[]){
             available_val = utils.toBoolean(available_val);
             default_val = utils.toBoolean(default_val);
             let inputAttrs = {};
             let labelAttrs = {};
+            let label_classes = [];
+            if(utils.isString(input_name)){
+                inputAttrs['name'] = input_name;
+            }
             if(!available_val){
                 inputAttrs['disabled'] = true;
                 labelAttrs['disabled'] = true;
+                label_classes.push(OptionValueDisplayNode.classes.disabled);
             }
             if(default_val){
                 inputAttrs['checked'] = true;
             }
             super([
                 new dynamic_html.nodes.input(OptionValueDisplayNode.input.type, OptionValueDisplayNode.input.name, name_val, null, null, null, inputAttrs),
-                new dynamic_html.nodes.label(name_val, null, null, null, labelAttrs)
+                new dynamic_html.nodes.label(name_val, null, label_classes, null, labelAttrs),
+                new dynamic_html.nodes.button("Edit", null, OptionValueDisplayNode.classes.button,
+                    OptionValueDisplayNode.events.button
+                )
             ], null, [OptionValueDisplayNode.classes.parent].concat(extra_cls));
         }
     }
@@ -183,11 +215,13 @@ var html_nodes = function(){
         static classes = {
             show: "show",
             hide: "hide",
-            parent: "option_container"
+            parent: "option_value_container"
         };
 
-        constructor(name_val, available_val, default_val, edit_flag=false){
-            if(utils.toBoolean(edit_flag) || !utils.isString(text)){
+        constructor(input_name, name_val, available_val, default_val, edit_flag=false){
+            let option_edit_class = null;
+            let option_display_class = null
+            if(utils.toBoolean(edit_flag) || !utils.isString(name_val)){
                 option_edit_class = OptionValueContainer.classes.show;
                 option_display_class = OptionValueContainer.classes.hide;
             }else{
@@ -196,24 +230,25 @@ var html_nodes = function(){
             }
             super([
                 new EditOptionValueFormContainer(name_val, available_val, default_val, option_edit_class),
-                new OptionValueDisplayNode(name_val, available_val, default_val, option_display_class)
+                new OptionValueDisplayNode(input_name, name_val, available_val, default_val, option_display_class)
             ], null, OptionValueContainer.classes.parent);
         }
     }
 
     class FullOptionContainer extends dynamic_html.nodes.div{
 
-        static keys = ['name', 'available', 'default'];
+        static keys = ['optionvalue__value', 'available', 'defaultoption'];
 
-        static create_option_value_container(obj){
+        static create_option_value_container(header_name, obj){
             if(utils.isObject(obj, this.keys)){
-                new OptionValueContainer(obj[this.keys[0]], obj[this.keys[1]], obj[this.keys[2]])
+                return new OptionValueContainer(header_name, obj[this.keys[0]], obj[this.keys[1]], obj[this.keys[2]])
             }else{
                 return null;
             }
         }
 
         constructor(text=null, opt_val_list=[]){
+            console.log(opt_val_list);
             if(!utils.isArray(opt_val_list)){
                 opt_val_list = [];
             }
@@ -225,7 +260,7 @@ var html_nodes = function(){
             }
             let cur = null;
             for(let i = 0; i < opt_val_list.length; i++){
-                cur = FullOptionContainer.create_option_value_container(opt_val_list[i]);
+                cur = FullOptionContainer.create_option_value_container(text, opt_val_list[i]);
                 if(utils.isObject(cur, OptionValueContainer)){
                     nodes.push(cur);
                 }else{
