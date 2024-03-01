@@ -1,4 +1,7 @@
 # storefront
+
+** Depreciated: Currently, work is being done to convert this project to a React Frontend **
+
 A custom Storefront along with the Content Management System. 
 Made using Django and vanilla JavaScript.
 
